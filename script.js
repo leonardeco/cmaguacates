@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initContactForm();
   initScrollTop();
   initFooterYear();
+  initActiveNav();
 });
 
 /* ─────────────────────────────────────────
@@ -219,6 +220,27 @@ function initScrollTop() {
   btn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+}
+
+/* ─────────────────────────────────────────
+   ACTIVE NAV — resalta sección visible
+───────────────────────────────────────── */
+function initActiveNav() {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  if (!sections.length || !navLinks.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const id = entry.target.getAttribute('id');
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+      });
+    });
+  }, { threshold: 0.4 });
+
+  sections.forEach(section => observer.observe(section));
 }
 
 /* ─────────────────────────────────────────

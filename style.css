@@ -41,6 +41,12 @@ h4 {
     padding: 0 2rem;
 }
 
+/* SCROLL OFFSET — evita que el navbar tape las secciones */
+:target,
+section[id] {
+    scroll-margin-top: 80px;
+}
+
 /* NAV */
 .navbar {
     display: flex;
@@ -182,7 +188,7 @@ h4 {
     justify-content: center;
     text-align: center;
     color: white;
-    background: url('https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+    background: url('img/cosecha-campo.jpg') center/cover no-repeat;
 }
 
 .hero-overlay {
@@ -948,6 +954,58 @@ h4 {
 
 .form-msg--error   { color: #e53e3e; }
 .form-msg--success { color: #2d6a1e; }
+
+/* WHATSAPP TOOLTIP */
+.whatsapp-float {
+    position: relative;
+}
+
+.whatsapp-float::before {
+    content: '¡Escríbenos!';
+    position: absolute;
+    right: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%) translateX(8px);
+    background: var(--dark);
+    color: white;
+    padding: 0.4rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.whatsapp-float::after {
+    content: '';
+    position: absolute;
+    right: calc(100% + 4px);
+    top: 50%;
+    transform: translateY(-50%) translateX(8px);
+    border: 6px solid transparent;
+    border-left-color: var(--dark);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-float:hover::before,
+.whatsapp-float:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+/* NAV LINKS ACTIVO */
+.nav-links a.active {
+    color: var(--primary);
+}
+
+.nav-links a.active::after {
+    width: 100%;
+}
 
 /* Focus visible para accesibilidad */
 :focus-visible {
