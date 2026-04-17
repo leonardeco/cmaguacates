@@ -1,142 +1,230 @@
-// Animación al hacer scroll
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-        }
-    });
-}, { threshold: 0.1 });
+/**
+ * CM Aguacates Quindío — script.js
+ * Módulos: Navbar · Scroll Animations · Counter · Gallery Lightbox · Form · Scroll-to-Top · Footer Year
+ */
 
-document.querySelectorAll('.fade-in, .card').forEach(el => observer.observe(el));
-
-// Contador animado para las estadísticas
-const counterObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const counters = entry.target.querySelectorAll('.counter');
-            counters.forEach(counter => {
-                if (counter.dataset.counted) return;
-                counter.dataset.counted = 'true';
-                const target = +counter.getAttribute('data-target');
-                const duration = 2000;
-                const step = target / (duration / 16);
-                let current = 0;
-                const updateCounter = () => {
-                    current += step;
-                    if (current < target) {
-                        counter.textContent = Math.ceil(current);
-                        requestAnimationFrame(updateCounter);
-                    } else {
-                        counter.textContent = target;
-                    }
-                };
-                updateCounter();
-            });
-        }
-    });
-}, { threshold: 0.3 });
-
-const statsBar = document.querySelector('.stats-bar');
-if (statsBar) counterObserver.observe(statsBar);
-
-// Navbar scroll effect
-window.addEventListener('scroll', () => {
-    const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-    }
+document.addEventListener('DOMContentLoaded', () => {
+  initNavbar();
+  initScrollAnimations();
+  initCounter();
+  initLightbox();
+  initContactForm();
+  initScrollTop();
+  initFooterYear();
 });
 
-// Hamburger menu
-const hamburger = document.getElementById('hamburger');
-const navLinks = document.querySelector('.nav-links');
-if (hamburger) {
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navLinks.classList.toggle('active');
+/* ─────────────────────────────────────────
+   NAVBAR — scroll effect + hamburger menu
+───────────────────────────────────────── */
+function initNavbar() {
+  const navbar    = document.querySelector('.navbar');
+  const hamburger = document.getElementById('hamburger');
+  const navLinks  = document.querySelector('.nav-links');
+
+  // Compact navbar on scroll
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+    // Show/hide scroll-top handled in initScrollTop
+  }, { passive: true });
+
+  // Hamburger toggle
+  hamburger.addEventListener('click', () => {
+    const isOpen = hamburger.classList.toggle('active');
+    navLinks.classList.toggle('active', isOpen);
+    hamburger.setAttribute('aria-expanded', isOpen);
+    hamburger.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+  });
+
+  // Close menu on link click
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger.classList.remove('active');
+      navLinks.classList.remove('active');
+      hamburger.setAttribute('aria-expanded', 'false');
+      hamburger.setAttribute('aria-label', 'Abrir menú');
     });
-    // Close menu when clicking a link
-    navLinks.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            hamburger.classList.remove('active');
-            navLinks.classList.remove('active');
-        });
-    });
+  });
 }
 
-// Validación del Formulario
-document.getElementById('contactForm').addEventListener('submit', function (e) {
-    const phone = document.getElementById('phone').value;
-    const msg = document.getElementById('msg');
-
-    if (phone.length < 10) {
-        e.preventDefault();
-        msg.innerText = "Mijo, verifique el teléfono (mínimo 10 números).";
-        msg.style.color = "#e53e3e";
-    } else {
-        msg.innerText = "¡Enviando mensaje! Gracias por su confianza.";
-        msg.style.color = "#2d6a1e";
-    }
-});
-
-// Lightbox Gallery
-let currentLightboxIndex = 0;
-const galleryItems = document.querySelectorAll('.gallery-item');
-
-function openLightbox(element) {
-    const img = element.querySelector('img');
-    const caption = element.querySelector('.gallery-overlay span').textContent.trim();
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightbox-img');
-    const lightboxCaption = document.getElementById('lightbox-caption');
-
-    // Find current index
-    galleryItems.forEach((item, index) => {
-        if (item === element) currentLightboxIndex = index;
+/* ─────────────────────────────────────────
+   SCROLL ANIMATIONS — fade-in con IntersectionObserver
+───────────────────────────────────────── */
+function initScrollAnimations() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target); // Solo animar una vez
+      }
     });
+  }, { threshold: 0.1 });
 
-    lightboxImg.src = img.src;
-    lightboxImg.alt = img.alt;
-    lightboxCaption.textContent = caption;
+  document.querySelectorAll('.fade-in, .card').forEach(el => observer.observe(el));
+}
+
+/* ─────────────────────────────────────────
+   COUNTER — animación de estadísticas
+───────────────────────────────────────── */
+function initCounter() {
+  const statsBar = document.querySelector('.stats-bar');
+  if (!statsBar) return;
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+
+      entry.target.querySelectorAll('.counter').forEach(counter => {
+        if (counter.dataset.counted) return;
+        counter.dataset.counted = 'true';
+
+        const target   = +counter.getAttribute('data-target');
+        const duration = 2000;
+        const step     = target / (duration / 16);
+        let current    = 0;
+
+        const tick = () => {
+          current += step;
+          if (current < target) {
+            counter.textContent = Math.ceil(current);
+            requestAnimationFrame(tick);
+          } else {
+            counter.textContent = target;
+          }
+        };
+
+        requestAnimationFrame(tick);
+      });
+
+      counterObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.3 });
+
+  counterObserver.observe(statsBar);
+}
+
+/* ─────────────────────────────────────────
+   LIGHTBOX — galería con navegación
+───────────────────────────────────────── */
+function initLightbox() {
+  const galleryGrid   = document.getElementById('gallery-grid');
+  const lightbox      = document.getElementById('lightbox');
+  const lightboxImg   = document.getElementById('lightbox-img');
+  const lightboxCap   = document.getElementById('lightbox-caption');
+  const btnClose      = document.getElementById('lightbox-close');
+  const btnPrev       = document.getElementById('lightbox-prev');
+  const btnNext       = document.getElementById('lightbox-next');
+
+  if (!galleryGrid || !lightbox) return;
+
+  const items = Array.from(galleryGrid.querySelectorAll('.gallery-item'));
+  let currentIndex = 0;
+
+  function open(index) {
+    currentIndex = index;
+    const item    = items[currentIndex];
+    const img     = item.querySelector('img');
+    const caption = item.querySelector('.gallery-overlay span').textContent.replace(/\s+/g, ' ').trim();
+
+    lightboxImg.src         = img.src;
+    lightboxImg.alt         = img.alt;
+    lightboxCap.textContent = caption;
+
+    lightbox.hidden            = false;
     lightbox.classList.add('active');
     document.body.style.overflow = 'hidden';
-}
+    btnClose.focus();
+  }
 
-function closeLightbox(event) {
-    if (event.target === document.getElementById('lightbox') || event.target.closest('.lightbox-close')) {
-        document.getElementById('lightbox').classList.remove('active');
-        document.body.style.overflow = '';
+  function close() {
+    lightbox.classList.remove('active');
+    lightbox.hidden              = true;
+    document.body.style.overflow = '';
+  }
+
+  function navigate(direction) {
+    currentIndex = (currentIndex + direction + items.length) % items.length;
+    open(currentIndex);
+  }
+
+  // Event delegation — galería
+  galleryGrid.addEventListener('click', e => {
+    const item = e.target.closest('.gallery-item');
+    if (item) open(+item.dataset.index);
+  });
+
+  // Teclado en tarjetas
+  galleryGrid.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const item = e.target.closest('.gallery-item');
+      if (item) { e.preventDefault(); open(+item.dataset.index); }
     }
-}
+  });
 
-function navigateLightbox(event, direction) {
-    event.stopPropagation();
-    currentLightboxIndex += direction;
-    if (currentLightboxIndex < 0) currentLightboxIndex = galleryItems.length - 1;
-    if (currentLightboxIndex >= galleryItems.length) currentLightboxIndex = 0;
+  // Controles del lightbox
+  btnClose.addEventListener('click', close);
+  btnPrev.addEventListener('click', () => navigate(-1));
+  btnNext.addEventListener('click', () => navigate(1));
 
-    const item = galleryItems[currentLightboxIndex];
-    const img = item.querySelector('img');
-    const caption = item.querySelector('.gallery-overlay span').textContent.trim();
+  // Click en el fondo
+  lightbox.addEventListener('click', e => {
+    if (e.target === lightbox) close();
+  });
 
-    document.getElementById('lightbox-img').src = img.src;
-    document.getElementById('lightbox-img').alt = img.alt;
-    document.getElementById('lightbox-caption').textContent = caption;
-}
-
-// Keyboard navigation for lightbox
-document.addEventListener('keydown', (e) => {
-    const lightbox = document.getElementById('lightbox');
+  // Teclado global
+  document.addEventListener('keydown', e => {
     if (!lightbox.classList.contains('active')) return;
+    if (e.key === 'Escape')      close();
+    if (e.key === 'ArrowLeft')   navigate(-1);
+    if (e.key === 'ArrowRight')  navigate(1);
+  });
+}
 
-    if (e.key === 'Escape') {
-        lightbox.classList.remove('active');
-        document.body.style.overflow = '';
-    } else if (e.key === 'ArrowLeft') {
-        navigateLightbox(e, -1);
-    } else if (e.key === 'ArrowRight') {
-        navigateLightbox(e, 1);
+/* ─────────────────────────────────────────
+   FORMULARIO DE CONTACTO — validación
+───────────────────────────────────────── */
+function initContactForm() {
+  const form    = document.getElementById('contactForm');
+  const formMsg = document.getElementById('form-msg');
+  if (!form) return;
+
+  form.addEventListener('submit', e => {
+    const phone = document.getElementById('phone').value.replace(/\D/g, '');
+
+    if (phone.length < 10) {
+      e.preventDefault();
+      showFormMsg('Mijo, verifique el teléfono (mínimo 10 números).', 'error');
+      return;
     }
-});
+
+    showFormMsg('¡Enviando mensaje! Gracias por su confianza.', 'success');
+  });
+
+  function showFormMsg(text, type) {
+    formMsg.textContent  = text;
+    formMsg.className    = `form-msg form-msg--${type}`;
+  }
+}
+
+/* ─────────────────────────────────────────
+   SCROLL TO TOP — botón flotante
+───────────────────────────────────────── */
+function initScrollTop() {
+  const btn = document.getElementById('scroll-top');
+  if (!btn) return;
+
+  window.addEventListener('scroll', () => {
+    btn.hidden = window.scrollY < 400;
+  }, { passive: true });
+
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+/* ─────────────────────────────────────────
+   FOOTER YEAR — año automático
+───────────────────────────────────────── */
+function initFooterYear() {
+  const yearEl = document.getElementById('footer-year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+}
